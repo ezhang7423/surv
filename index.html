@@ -63,6 +63,7 @@
         style="margin-right: 10px; font-size: 18px;">put your image
         here</span><input onchange="encodeImageFileAsURL(this)" type="file" name="img" accept="image/*"></div>
 
+
     <p>UCSB COVID-19 Clearance Status</p>
     <h1 style="margin-top: -20px; font-size: 2.75em;">Cleared to be On-Site</h1>
     <div class="studentStatus">STUDENT</div>
@@ -84,14 +85,12 @@
       </div>
     </div>
 
-    <div style="font-size: 0.8em">Next Survey Due: 9/26/2021 1:00 AM</div>
     <div class="badge-mask-language">Mask REQUIRED Indoors</div>
   </div>
 
-  <script src="/wwwroot/lib/jquery/jquery.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"
+    integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
   <script src="https://studenthealthoc.sa.ucsb.edu/Resources/js/activity.js"></script>
-  <script src="/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
-  <script src="/bower_components/bootstrap-sidebar/dist/js/sidebar.js"></script>
   <script src="https://studenthealthoc.sa.ucsb.edu/Resources/js/plugins/bootbox.min.js"></script>
   <script src="https://studenthealthoc.sa.ucsb.edu/Resources/js/ie10-viewport-bug-workaround.js"></script>
   <script src="https://studenthealthoc.sa.ucsb.edu/Resources/js/plugins/jquery.idletimer.js"></script>
@@ -108,16 +107,88 @@
   <script src="https://studenthealthoc.sa.ucsb.edu/Resources/js/openCommunicator.js"></script>
   <script src="https://studenthealthoc.sa.ucsb.edu/Resources/js/responsive.js"></script>
   <script src="https://studenthealthoc.sa.ucsb.edu/Resources/js/fileUpload.js"></script>
-  <script src="/wwwroot/js/builtIn.js"></script>
   <script>
+
+    function processFile(file) {
+      if (!/image/i.test(file.type)) {
+        alert("File " + file.name + " is not an image.");
+        return false;
+      }
+
+      // read the files
+      var reader = new FileReader();
+      reader.readAsArrayBuffer(file);
+
+      reader.onload = function (event) {
+        // blob stuff
+        var blob = new Blob([event.target.result]); // create blob...
+        window.URL = window.URL || window.webkitURL;
+        var blobURL = window.URL.createObjectURL(blob); // and get it's URL
+
+        // helper Image object
+        var image = new Image();
+        image.src = blobURL;
+        //preview.appendChild(image); // preview commented out, I am using the canvas instead
+        image.onload = function () {
+          // have to wait till it's loaded
+          let resized = resizeMe(image); // send it to canvas
+          localStorage.setItem("pictureUrl", resized);
+          location.reload();
+        };
+      };
+    }
+
+    // === RESIZE ====
+
+    function resizeMe(img) {
+      var canvas = document.createElement("canvas");
+
+      var width = img.width;
+      var height = img.height;
+      var max_width = 171;
+      var max_height = 212;
+
+
+      // calculate the width and height, constraining the proportions
+      if (width > height) {
+        if (width > max_width) {
+          //height *= max_width / width;
+          height = Math.round((height *= max_width / width));
+          width = max_width;
+        }
+      } else {
+        if (height > max_height) {
+          //width *= max_height / height;
+          width = Math.round((width *= max_height / height));
+          height = max_height;
+        }
+      }
+
+      // resize the canvas and draw the image data into it
+      canvas.width = width;
+      canvas.height = height;
+      var ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, width, height);
+
+
+      return canvas.toDataURL("image/jpeg", 0.7); // get the data from canvas as 70% JPG (can be also PNG, etc.)
+    }
+
     function encodeImageFileAsURL(element) {
       let file = element.files[0];
       let reader = new FileReader();
       reader.onloadend = function () {
-        localStorage.setItem('pictureUrl', reader.result)
-        location.reload()
+        let res = reader.result;
+        try {
+          localStorage.setItem('pictureUrl', res)
+          location.reload()
+        } catch (e) {
+          // alert(e)
+          processFile(file)
+        }
 
       }
+
       let r = reader.readAsDataURL(file);
     }
 
@@ -167,193 +238,6 @@
 
     // console.log(nameElement)
   </script>
-  <script>
-
-      < !--Google Analytics-- >
-
-      (function (i, s, o, g, r, a, m) {
-        i[' GoogleAnalyticsObject'] = r; i[r] = i[r] || function () { (i[r].q = i[r].q || []).push(arguments) }, i[r].l = 1 *
-          new Date(); a = s.createElement(o), m = s.getElementsByTagName(o)[0]; a.async = 1; a.src = g;
-        m.parentNode.insertBefore(a, m)
-      })(window, document, 'script', '//www.google-analytics.com/analytics.js'
-        , 'ga'); ga('create', 'UA-74584394-1', 'auto'); ga('send', 'pageview'); < !--UCSB Functions-- >
-          function doesHeaderContainText(text) {
-            return document.querySelector('#navbar').textContent.indexOf(text) >=
-              0
-          }
-
-          < !--Remove Edit Preferred Pronouns(comes from GOLD)-- >
-              if (window.location.href.toLowerCase().indexOf("profile.aspx") > 1) {
-      document.querySelector('#editPreferredPronouns').remove()
-    }
-
-              < !--Change Waiver button-- >
-                if (window.location.href.toLowerCase().indexOf("insenrollconditions2.aspx") > 1) {
-      let oldButton = document.querySelector("input[name='cmdSpecSubmit']");
-      let newButton = document.createElement('a');
-      newButton.href = 'https://www2.academichealthplans.com/school/7024.html';
-      newButton.target = '_blank';
-      newButton.innerHTML = '<input type="button" class="btn btn-primary" value="Waiver" />';
-
-      oldButton.parentNode.replaceChild(newButton, oldButton);
-    }
-
-                < !--Change Health History headings-- >
-                  if (window.location.href.toLowerCase().includes("healthhistory")) {
-
-      document.body.innerHTML = document.body.innerHTML.replace('Medical Conditions', 'My Personal Social
-                  History
-                  and Medical Conditions');
-
-                  document.body.innerHTML = document.body.innerHTML.replace('Family History', "My Family's Social
-                  History and
-                  Medical Conditions");
-
-                  }
-
-                  < !--Change Almost there... -->
-                    if (window.location.href.toLowerCase().includes("appointments_book_confirm")) {
-
-      document.body.innerHTML = document.body.innerHTML.replace('Almost There...', 'Booking
-                    Confirmation');
-
-                    }
-
-
-                    < !--Delete new Survey heading-- >
-                      if (window.location.href.toLowerCase().includes("survey/intro/")) {
-
-      document.body.innerHTML = document.body.innerHTML.replace('Please complete the following clinical
-                      survey,
-        answering all questions: ', '');
-
-                      }
-
-                      < !--Remove appointment branches for employees / affiliates-- >
-      removeBranches = function (selections) {
-        selections.forEach((selection) => {
-          document.querySelectorAll('fieldset span').forEach((span) => {
-            if (span.getAttribute('title') === selection) {
-              span.remove();
-            }
-          })
-        });
-      }
-
-                        studentBranches = ['TeleHealth Appointments', 'SHS In-Clinic Appointments', 'COVID-19 Services
-        (Testing and
-                        Vaccinations) ', 'Flu Shots']
-                        employeeBranches = ['Employee COVID-19 Testing', 'Employee COVID-19 Vaccination']
-
-                        if (doesHeaderContainText('(EMP)') || doesHeaderContainText('(AFF)')) {
-
-        removeBranches(studentBranches);
-
-      } else {
-
-        removeBranches(employeeBranches);
-
-      }
-
-                        < !--Remove student menu options for employees / affiliates-- >
-                          < !--Add 'Profile' back in for Emps if needed-- >
-        removeMenuOptions = function (links) {
-          links.forEach((link) => {
-            document.querySelectorAll('.nav-pills li').forEach((href) => {
-              if (href.textContent == link) {
-                href.remove();
-              }
-            })
-          });
-        }
-
-    studentMenus = ['Health History', 'Groups/Workshops', 'Referrals', 'Forms', 'Insurance
-                            Waivers', 'GAP
-                            Enrollment(Waived Students)', 'Discharge Summaries', 'Immunizations Status', 'Online
-                            Statements']
-
-                            if (doesHeaderContainText('(EMP)') || doesHeaderContainText('(AFF)')) {
-
-      removeMenuOptions(studentMenus);
-
-    }
-
-                            < !--Remove New Message button for employees and affiliates-- >
-                              if (doesHeaderContainText('(EMP)') || doesHeaderContainText('(AFF)')) {
-
-        if (window.location.href.toLowerCase().indexOf("messages_home.aspx") > 1) {
-          var element = document.getElementById("cmdCompose");
-          element.parentNode.removeChild(element);
-        }
-
-      }
-
-                              < !--Add links to "you can't book" population text-- >
-                                if
-      (window.location.href.toLowerCase().includes("/appointments_book_list_available.aspx")) {
-
-      document.body.innerHTML = document.body.innerHTML.replace('You are not in a population
-                                that is eligible to
-                                book this type of appointment.', 'You are not eligible to schedule this type of
-                                appointment.For more
-                                information, please visit this < a
-                                  href = "https://studenthealth.sa.ucsb.edu/home/coronavirus/patient-portal-ineligibility-message"
-                                  target = "_blank" rel = "noopener" > SHS web page</a >.');
-
-                                  }
-
-                                  < !--4 / 26 / 21, mcm, Change the Status buttons for COVID Vaccines(removed)-- >
-                                    < !--8 / 26 / 21, mcm, Change the Status buttons for COVID Immunization
-                                      Compliance-- >
-                                      if (window.location.href.toLowerCase().includes("/clearances.aspx")) {
-        let inprogress = "In Progress";
-        let compliant = "Compliant";
-        let notcompliant = "Not Compliant";
-        let exempt = "Exempt";
-        var immstatus =
-          document.querySelectorAll('[data-code="IMCOV"]')[0].children[4].getAttribute("data-detail")
-
-        if (immstatus.includes(inprogress)) {
-          document.querySelectorAll('[data-code="IMCOV"]')[0].children[3].children.item(0).innerHTML
-            = 'In Progress';
-        } else if (immstatus.includes(notcompliant)) {
-          document.querySelectorAll('[data-code="IMCOV"]')[0].children[3].children.item(0).innerHTML
-            = 'Not Compliant';
-        } else if (immstatus.includes(compliant)) {
-          document.querySelectorAll('[data-code="IMCOV"]')[0].children[3].children.item(0).innerHTML
-            = 'Compliant';
-        } else if (immstatus.includes(exempt)) {
-          document.querySelectorAll('[data-code="IMCOV"]')[0].children[3].children.item(0).innerHTML
-            = 'Exempt';
-        } else {
-          document.querySelectorAll('[data-code="IMCOV"]')[0].children[3].children.item(0).innerHTML
-            = 'Not Known';
-        }
-      }
-
-                                      < !--8 / 26 / 21, mcm, get rid of a superfluos line, where did you come from. -- >
-                                        < !--9 / 17 / 21 AJ, Commenting this out for now.nth - child(8) is removing
-                                          questionnaire submit btn, and nth - child(7) is removing new message submit
-    btn. -- >
-                                          /* var empexereq = document.querySelector("#ctl03 > div:nth-child(8)")
-
-                                          if(empexereq !== null && empexereq !== '') {
-                                          empexereq.hidden = true
-                                          }
-                                          */
-
-                                          < !--9 / 7 / 21, clicking "print" executes a ctrl + p in Medical Clearances
-    page-- >
-                                            if (document.querySelector("a.infol").getAttribute("href") ==
-      'immunizations_print.aspx') {
-      document.querySelector("a[href='immunizations_print.aspx']").setAttribute("href",
-        "javascript:window.print()");
-      document.querySelector("a.infol").setAttribute("target", "");
-    }
-
-  </script>
-  <script>var pncIdlePeriodSec = 1800;</script><!-- SCRIPTS -->
-
 
 
 
