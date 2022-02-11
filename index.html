@@ -23,8 +23,8 @@
   <link href="https://studenthealthoc.sa.ucsb.edu/Resources/lib/datetimepicker/datetimepicker.css" rel="stylesheet">
   <link href="https://studenthealthoc.sa.ucsb.edu/Resources/stylesheets/responsive.css" rel="stylesheet">
   <link href="https://studenthealthoc.sa.ucsb.edu/Resources/stylesheets/upload.css" rel="stylesheet">
-  <script src="https://static.sa.ucsb.edu/js/SHS/badge.custom.js"></script>
-  <script src="https://static.sa.ucsb.edu/js/SHS/survey.custom.js"></script>
+  <!-- <script src="https://static.sa.ucsb.edu/js/SHS/badge.custom.js"></script> -->
+  <!-- <script src="https://static.sa.ucsb.edu/js/SHS/survey.custom.js"></script> -->
   <link rel="stylesheet" href="https://static.sa.ucsb.edu/css/SHS/badge.custom.css">
 
   <script async="" src="//www.google-analytics.com/analytics.js"></script>
@@ -42,15 +42,26 @@
 
   <script src="Resources/yui/build/yui-combined.js"></script>
   <script src="Resources/js/emf.js"></script><!-- YUIJS -->
-  <style type="text/css"></style>
+  <style type="text/css">
+    .hidden {
+      display: none;
+    }
+  </style>
 
 </head>
 
 <body class="SurveyFormsHome yui-skin-sam has-badge">
   <div id="quarantineBadge" class="badge-Green">
     <div style="position: fixed; top: 0; left: 0; width: 100vw; z-index: 9999;">
-      <button class="exit btn btn-primary btn-sm pull-right"><i class="fa fa-close"></i></button>
+      <button class="exit btn btn-primary btn-sm pull-right"><i onclick="localStorage.clear(); location.reload()"
+          style="font-size: 14px;" class="fa fa-close">reset</i></button>
     </div>
+    <input class="hidden" style="margin-top: 30px; color: black;" type="text" id="surv-name-input"
+      onkeypress="enterName(event)" placeholder="name e.g. (first last)">
+
+    <div id="surv-picture-input" class="hidden" style="margin-top: 30px; display: flex;"><span
+        style="margin-right: 10px; font-size: 18px;">put your image
+        here</span><input onchange="encodeImageFileAsURL(this)" type="file" name="img" accept="image/*"></div>
 
     <p>UCSB COVID-19 Clearance Status</p>
     <h1 style="margin-top: -20px; font-size: 2.75em;">Cleared to be On-Site</h1>
@@ -58,11 +69,11 @@
     <div id="now" style="font-size: 1.4em">9/25/2021 1:38 PM</div>
     <div id="patInfo" class="row text-center" style="margin-top: 15px;">
       <div class="col-xs-12">
-        <img id="patImage" src="./images/face.png" alt="Patient Image" style="max-width: 170px; margin-top: -15px;">
+        <img id="surv-picture" src="" alt="Patient Image" style="max-width: 170px; margin-top: -15px;">
       </div>
       <div class="col-xs-12">
         <h3 id="badgename" class="mb-0" style="margin-top: 4px;">
-          <strong>EDDIE - HE/HIM/HIS ZHANG</strong>
+          <strong><span id="surv-first-name"></span> - HE/HIM/HIS <span id="surv-last-name"></span></strong>
         </h3>
       </div>
       <div class="col-xs-12">
@@ -99,6 +110,17 @@
   <script src="https://studenthealthoc.sa.ucsb.edu/Resources/js/fileUpload.js"></script>
   <script src="/wwwroot/js/builtIn.js"></script>
   <script>
+    function encodeImageFileAsURL(element) {
+      let file = element.files[0];
+      let reader = new FileReader();
+      reader.onloadend = function () {
+        localStorage.setItem('pictureUrl', reader.result)
+        location.reload()
+
+      }
+      let r = reader.readAsDataURL(file);
+    }
+
     var dateObj = new Date();
     var month = dateObj.getUTCMonth() + 1; //months from 1-12
     var day = dateObj.getUTCDate();
@@ -107,23 +129,60 @@
     let newdate = month + "/" + day + '/' + year + ' 6:02 AM';
     let timeText = document.querySelector('#now')
     timeText.innerText = newdate
+
+
+    let firstNameElement = document.querySelector("#surv-first-name")
+    let lastNameElement = document.querySelector("#surv-last-name")
+    let nameInput = document.querySelector("#surv-name-input")
+    let pictureElement = document.querySelector("#surv-picture")
+    let pictureInput = document.querySelector("#surv-picture-input")
+
+    let cachedFirstName = localStorage.getItem('firstName')
+    let cachedLastName = localStorage.getItem('lastName')
+    let cachedImg = localStorage.getItem('pictureUrl')
+
+
+
+    function enterName(e) {
+      if (event.key == 'Enter') {
+        let names = nameInput.value.toUpperCase().split(' ')
+        localStorage.setItem('firstName', names[0]);
+        localStorage.setItem('lastName', names[1]);
+        location.reload()
+      }
+    }
+    // function enterName(e) { if (event.key == 'Enter') { localStorage.setItem('name', nameInput.value) } }
+    if (cachedFirstName) {
+      firstNameElement.innerText = cachedFirstName
+      lastNameElement.innerText = cachedLastName
+    } else {
+      nameInput.classList.remove('hidden')
+    }
+    if (cachedImg) {
+      pictureElement.src = cachedImg
+    } else {
+      // console.log(pictureInput)
+      pictureInput.classList.remove('hidden')
+    }
+
+    // console.log(nameElement)
   </script>
   <script>
 
       < !--Google Analytics-- >
 
-        (function (i, s, o, g, r, a, m) {
-          i[' GoogleAnalyticsObject'] = r; i[r] = i[r] || function () { (i[r].q = i[r].q || []).push(arguments) }, i[r].l = 1 *
-            new Date(); a = s.createElement(o), m = s.getElementsByTagName(o)[0]; a.async = 1; a.src = g;
-          m.parentNode.insertBefore(a, m)
-        })(window, document, 'script', '//www.google-analytics.com/analytics.js'
-          , 'ga'); ga('create', 'UA-74584394-1', 'auto'); ga('send', 'pageview'); < !--UCSB Functions-- >
-            function doesHeaderContainText(text) {
-              return document.querySelector('#navbar').textContent.indexOf(text) >=
-                0
-            }
+      (function (i, s, o, g, r, a, m) {
+        i[' GoogleAnalyticsObject'] = r; i[r] = i[r] || function () { (i[r].q = i[r].q || []).push(arguments) }, i[r].l = 1 *
+          new Date(); a = s.createElement(o), m = s.getElementsByTagName(o)[0]; a.async = 1; a.src = g;
+        m.parentNode.insertBefore(a, m)
+      })(window, document, 'script', '//www.google-analytics.com/analytics.js'
+        , 'ga'); ga('create', 'UA-74584394-1', 'auto'); ga('send', 'pageview'); < !--UCSB Functions-- >
+          function doesHeaderContainText(text) {
+            return document.querySelector('#navbar').textContent.indexOf(text) >=
+              0
+          }
 
-            < !--Remove Edit Preferred Pronouns(comes from GOLD)-- >
+          < !--Remove Edit Preferred Pronouns(comes from GOLD)-- >
               if (window.location.href.toLowerCase().indexOf("profile.aspx") > 1) {
       document.querySelector('#editPreferredPronouns').remove()
     }
